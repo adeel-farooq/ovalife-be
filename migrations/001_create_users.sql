@@ -5,9 +5,11 @@ CREATE TABLE
         password TEXT NOT NULL,
         first_name TEXT,
         last_name TEXT,
-        created_at TIMESTAMP
-        WITH
-            TIME ZONE DEFAULT now ()
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_by TEXT,
+        updated_by TEXT
     );
 
 CREATE TABLE
