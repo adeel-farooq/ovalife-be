@@ -1,6 +1,6 @@
 CREATE TABLE
     IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         first_name TEXT,
@@ -750,3 +750,13 @@ VALUES
         'Other',
         'system'
     );
+
+-- Add more in users table as needed
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS mobile TEXT;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS reset_password_token TEXT;
+
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMP;
