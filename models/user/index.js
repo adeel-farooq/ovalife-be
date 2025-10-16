@@ -1,5 +1,6 @@
 const { sequelize } = require("../../db");
 const { DataTypes } = require("sequelize");
+const basicModelFields = require("../basicModelFields");
 
 const User = sequelize.define(
   "User",
@@ -13,14 +14,11 @@ const User = sequelize.define(
     password: { type: DataTypes.TEXT, allowNull: false },
     first_name: { type: DataTypes.TEXT },
     last_name: { type: DataTypes.TEXT },
-    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
-    created_by: { type: DataTypes.TEXT },
-    updated_by: { type: DataTypes.TEXT },
+
     mobile: { type: DataTypes.TEXT, allowNull: true },
     reset_password_token: { type: DataTypes.STRING },
     reset_password_expires: { type: DataTypes.DATE },
+    ...basicModelFields,
   },
   {
     tableName: "users",
