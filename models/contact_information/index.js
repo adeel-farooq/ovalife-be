@@ -1,6 +1,6 @@
 const { sequelize } = require("../../db");
 const { DataTypes } = require("sequelize");
-const basicModelFields = require("../basicModelFields");
+const basicModelFields = require("../basicFields");
 
 const ContactInformation = sequelize.define(
   "ContactInformation",

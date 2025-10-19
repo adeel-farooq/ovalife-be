@@ -47,3 +47,33 @@ CREATE TABLE
             updated_by TEXT,
             is_active BOOLEAN DEFAULT TRUE
     );
+
+alter table contact_information
+add column if not exists user_id UUID REFERENCES users (id);
+
+alter table physical_characteristics
+add column if not exists user_id UUID REFERENCES users (id);
+
+CREATE TABLE
+    IF NOT EXISTS user_filters (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        donor_code VARCHAR(36) UNIQUE NOT NULL,
+        race VARCHAR(36),
+        user_id UUID REFERENCES users (id),
+        hair_color VARCHAR(36),
+        eye_color VARCHAR(36),
+        education_level VARCHAR(100),
+        height_cm DECIMAL(5, 2),
+        blood_type VARCHAR(10),
+        identification VARCHAR(50),
+        available_for_fresh_cycles BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            created_by TEXT,
+            updated_by TEXT,
+            is_active BOOLEAN DEFAULT TRUE
+    );

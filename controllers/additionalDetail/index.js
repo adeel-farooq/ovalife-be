@@ -3,23 +3,27 @@ const Helper = require("./helper");
 const { Op } = require("sequelize");
 const ContactInfo = require("../../models/contact_information");
 const PhysicalCharacteristics = require("../../models/physical_characteristics");
+const UserFilters = require("../../models/filter");
 
-const Helper = require("./helper");
-const { Op } = require("sequelize");
-
-const addAdditionalDetails = async (req, res) => {
+const create = async (req, res) => {
   try {
-    const { user_id, contact_info, physical_characteristics } = req.body;
+    // Extract user_id from JWT token (set by auth middleware)
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized access." });
+    }
+
+    const { contact_info, physical_characteristics } = req.body;
 
     // Validate and process contact information
     const contactInfo = await ContactInfo.create({
-      user_id,
+      created_by: user_id,
       ...contact_info,
     });
 
     // Validate and process physical characteristics
     const physicalTraits = await PhysicalCharacteristics.create({
-      user_id,
+      created_by: user_id,
       ...physical_characteristics,
     });
 
@@ -29,12 +33,13 @@ const addAdditionalDetails = async (req, res) => {
       physicalTraits,
     });
   } catch (error) {
-    Helper.handleError(res, error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
-const getAdditionalDetails = async (req, res) => {
+const get = async (req, res) => {
   try {
-    const { user_id } = req.params; // Assuming user_id is passed as a URL parameter
+    const { user_id } = req.query; // Assuming user_id is passed as a query parameter
 
     // Fetch contact information
     const contactInfo = await ContactInfo.findOne({ where: { user_id } });
@@ -50,10 +55,82 @@ const getAdditionalDetails = async (req, res) => {
       physicalTraits,
     });
   } catch (error) {
-    Helper.handleError(res, error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+const filterSave = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized access." });
+    }
+
+    const now = new Date();
+    let userFilters = await UserFilters.findOne({
+      where: { user_id, is_active: true },
+    });
+
+    if (req.body.id || userFilters) {
+      const [affectedRows, updatedFilter] = await UserFilters.update(
+        {
+          ...req.body,
+          updated_by: user_id,
+          updated_at: now,
+        },
+        {
+          where: { id: req.body.id || userFilters.id },
+          returning: true,
+        }
+      );
+
+      if (!updatedFilter || updatedFilter.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No matching filter found to update." });
+      }
+
+      userFilters = updatedFilter[0]; // Directly use returned updated record
+    } else {
+      userFilters = await UserFilters.create({
+        ...req.body,
+        created_by: user_id,
+        created_at: now,
+        updated_by: user_id,
+        updated_at: now,
+      });
+    }
+
+    return res.status(200).json({
+      message: "User filters saved successfully.",
+      data: userFilters,
+    });
+  } catch (error) {
+    console.error("Filter save error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+const filterGet = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized access." });
+    }
+    const userFilters = await UserFilters.findOne({ where: { user_id } });
+
+    return res.status(200).json({
+      message: "User filters fetched successfully.",
+      data: userFilters,
+    });
+  } catch (error) {
+    console.error("Filter get error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 module.exports = {
-  addAdditionalDetails,
-  getAdditionalDetails,
+  create,
+  get,
+  filterSave,
+  filterGet,
 };
