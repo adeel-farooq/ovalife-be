@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const ContactInfo = require("../../models/contact_information");
 const PhysicalCharacteristics = require("../../models/physical_characteristics");
 const UserFilters = require("../../models/filter");
+const { sequelize } = require("../../db");
 
 const create = async (req, res) => {
   try {
@@ -128,9 +129,159 @@ const filterGet = async (req, res) => {
   }
 };
 
+const getFilteredUsers = async (req, res) => {
+  try {
+    const {
+      ethnicity,
+      hair_color,
+      eye_color,
+      skin_tone,
+      blood_type,
+      height_min,
+      height_max,
+      weight_min,
+      weight_max,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    const query = `
+      SELECT *
+      FROM physical_characteristics
+      WHERE
+        ($1 IS NULL OR ethnicity = $1)
+        AND ($2 IS NULL OR hair_color = $2)
+        AND ($3 IS NULL OR eye_color = $3)
+        AND ($4 IS NULL OR skin_tone = $4)
+        AND ($5 IS NULL OR blood_type = $5)
+        AND ($6 IS NULL OR height >= $6)
+        AND ($7 IS NULL OR height <= $7)
+        AND ($8 IS NULL OR weight >= $8)
+        AND ($9 IS NULL OR weight <= $9)
+      ORDER BY created_at DESC
+      LIMIT $10 OFFSET $11;
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM physical_characteristics
+      WHERE
+        ($1 IS NULL OR ethnicity = $1)
+        AND ($2 IS NULL OR hair_color = $2)
+        AND ($3 IS NULL OR eye_color = $3)
+        AND ($4 IS NULL OR skin_tone = $4)
+        AND ($5 IS NULL OR blood_type = $5)
+        AND ($6 IS NULL OR height >= $6)
+        AND ($7 IS NULL OR height <= $7)
+        AND ($8 IS NULL OR weight >= $8)
+        AND ($9 IS NULL OR weight <= $9);
+    `;
+
+    const params = [
+      ethnicity || null,
+      hair_color || null,
+      eye_color || null,
+      skin_tone || null,
+      blood_type || null,
+      height_min || null,
+      height_max || null,
+      weight_min || null,
+      weight_max || null,
+      limit,
+      offset,
+    ];
+
+    const [dataResult, countResult] = await Promise.all([
+      sequelize.query(query, params),
+      sequelize.query(countQuery, params.slice(0, 9)), // last 2 params (limit, offset) skip
+    ]);
+
+    return res.json({
+      success: true,
+      total: Number(countResult.rows[0].total),
+      currentPage: Number(page),
+      totalPages: Math.ceil(countResult.rows[0].total / limit),
+      data: dataResult.rows,
+    });
+  } catch (err) {
+    console.error("❌ Filter Query Error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const getRecommendedUsers = async (req, res) => {
+  try {
+    const { user_id, limit = 10, page = 1 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // 1️⃣ Get current user's attributes
+    const userQuery = `
+      SELECT ethnicity, hair_color, eye_color, skin_tone, blood_type
+      FROM physical_characteristics
+      WHERE user_id = $1
+      LIMIT 1;
+    `;
+    const userRes = await pool.query(userQuery, [user_id]);
+    if (userRes.rows.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    const u = userRes.rows[0];
+
+    // 2️⃣ Find similar users with matching traits (calculate similarity score)
+    const matchQuery = `
+      SELECT
+        user_id,
+        ethnicity,
+        hair_color,
+        eye_color,
+        skin_tone,
+        blood_type,
+        (
+          (CASE WHEN ethnicity = $2 THEN 1 ELSE 0 END) +
+          (CASE WHEN hair_color = $3 THEN 1 ELSE 0 END) +
+          (CASE WHEN eye_color = $4 THEN 1 ELSE 0 END) +
+          (CASE WHEN skin_tone = $5 THEN 1 ELSE 0 END) +
+          (CASE WHEN blood_type = $6 THEN 1 ELSE 0 END)
+        ) AS similarity_score
+      FROM physical_characteristics
+      WHERE user_id != $1
+      ORDER BY similarity_score DESC, created_at DESC
+      LIMIT $7 OFFSET $8;
+    `;
+
+    const matchRes = await sequelize.query(matchQuery, {
+      replacements: [
+        user_id,
+        u.ethnicity,
+        u.hair_color,
+        u.eye_color,
+        u.skin_tone,
+        u.blood_type,
+        limit,
+        offset,
+      ],
+    });
+
+    return res.json({
+      success: true,
+      currentPage: Number(page),
+      data: matchRes.rows,
+    });
+  } catch (err) {
+    console.error("❌ Recommendation Error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   create,
   get,
   filterSave,
   filterGet,
+  getFilteredUsers,
+  getRecommendedUsers,
 };

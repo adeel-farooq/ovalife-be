@@ -77,3 +77,15 @@ CREATE TABLE
             updated_by TEXT,
             is_active BOOLEAN DEFAULT TRUE
     );
+
+CREATE INDEX idx_ethnicity ON physical_characteristics (ethnicity);
+
+CREATE INDEX idx_hair_color ON physical_characteristics (hair_color);
+
+CREATE INDEX idx_eye_color ON physical_characteristics (eye_color);
+
+CREATE INDEX idx_skin_tone ON physical_characteristics (skin_tone);
+
+CREATE INDEX idx_blood_type ON physical_characteristics (blood_type);
+
+CREATE INDEX idx_created_at ON physical_characteristics (created_at DESC);
