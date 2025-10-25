@@ -18,6 +18,9 @@ const User = sequelize.define(
     mobile: { type: DataTypes.TEXT, allowNull: true },
     reset_password_token: { type: DataTypes.STRING },
     reset_password_expires: { type: DataTypes.DATE },
+    type: { type: DataTypes.STRING, defaultValue: "guest" },
+    job_title: { type: DataTypes.STRING, allowNull: true },
+
     ...basicModelFields,
   },
   {

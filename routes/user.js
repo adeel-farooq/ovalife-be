@@ -8,5 +8,6 @@ router.post("/additional-details", auth, additionalDetails.create);
 router.get("/additional-details", auth, additionalDetails.get);
 router.post("/filter", auth, additionalDetails.filterSave);
 router.get("/filter", auth, additionalDetails.filterGet);
+router.get("/list", auth, additionalDetails.getUsers);
 
 module.exports = router;
