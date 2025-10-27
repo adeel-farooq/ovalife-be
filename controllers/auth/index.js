@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
+const UserClinic = require("../../models/user_clinic");
 const Helper = require("./helper");
 const { Op } = require("sequelize");
 const crypto = require("crypto");
@@ -15,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "ovalife";
 
 const register = async (req, res) => {
   try {
-    const { email, password, first_name, last_name } = req.body;
+    const { email, password, first_name, last_name, clinic_ids } = req.body;
 
     // Defensive field presence check
     if (!email?.trim() || !password?.trim()) {
@@ -47,6 +48,14 @@ const register = async (req, res) => {
     // Defensive check
     if (!user?.id) {
       return res.status(500).json({ message: "User creation failed." });
+    }
+
+    if (clinic_ids && Array.isArray(clinic_ids)) {
+      const userClinicEntries = clinic_ids.map((clinic_id) => ({
+        user_id: user.id,
+        clinic_id,
+      }));
+      await UserClinic.bulkCreate(userClinicEntries);
     }
 
     // Success response

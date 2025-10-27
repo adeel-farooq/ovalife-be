@@ -93,3 +93,37 @@ CREATE INDEX if not exists idx_created_at ON physical_characteristics (created_a
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS type VARCHAR(50),
 ADD COLUMN IF NOT EXISTS job_title VARCHAR(50);
+
+CREATE TABLE
+    IF NOT EXISTS user_clinic (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        user_id UUID,
+        clinic_id UUID
+    );
+
+CREATE TABLE
+    IF NOT EXISTS tasks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        clinic_id UUID NOT NULL,
+        user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        task_type TEXT NOT NULL,
+        status TEXT,
+        task_date DATE NOT NULL,
+        start_time TIME
+        WITH
+            TIME ZONE NOT NULL,
+            end_time TIME
+        WITH
+            TIME ZONE,
+            created_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT now (),
+            updated_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT now (),
+            created_by TEXT,
+            updated_by TEXT,
+            is_active BOOLEAN DEFAULT TRUE
+    );

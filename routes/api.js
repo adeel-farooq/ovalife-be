@@ -8,8 +8,10 @@ router.get("/hello", (req, res) => {
 // Mount module routes
 const authRoutes = require("./auth");
 const userRoutes = require("./user");
+const taskRoutes = require("./task");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
+router.use("/task", taskRoutes);
 
 module.exports = router;
