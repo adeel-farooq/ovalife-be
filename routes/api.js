@@ -9,9 +9,11 @@ router.get("/hello", (req, res) => {
 const authRoutes = require("./auth");
 const userRoutes = require("./user");
 const taskRoutes = require("./task");
+const chatRoutes = require("./chat");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
 router.use("/task", taskRoutes);
+router.use("/chat", chatRoutes);
 
 module.exports = router;

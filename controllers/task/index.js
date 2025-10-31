@@ -67,7 +67,6 @@ const getTask = async (req, res) => {
 const getTasks = async (req, res) => {
   try {
     const whereClause = Helpers.prepareWhereClause(req.query);
-    console.log(">>>>>>>>>>>>>>>>>>");
 
     let tasks;
     if (Object.keys(whereClause).length === 0) {

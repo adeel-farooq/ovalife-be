@@ -46,6 +46,15 @@ const Task = sequelize.define(
       allowNull: false,
     },
     ...basicModelFields,
+    account_type: {
+      type: DataTypes.STRING,
+    },
+    sub_type: {
+      type: DataTypes.STRING,
+    },
+    assignee: {
+      type: DataTypes.UUID,
+    },
   },
   {
     tableName: "tasks",

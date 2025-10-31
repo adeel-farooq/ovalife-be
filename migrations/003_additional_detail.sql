@@ -125,5 +125,29 @@ CREATE TABLE
             TIME ZONE DEFAULT now (),
             created_by TEXT,
             updated_by TEXT,
+            is_active BOOLEAN DEFAULT TRUE,
+            account_type TEXT,
+            sub_type TEXT,
+            assignee UUID
+    );
+
+CREATE TABLE
+    IF NOT EXISTS chats (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        sender_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- sender
+        receiver_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE, -- recipient
+        message TEXT NOT NULL,
+        sender TEXT CHECK (sender IN ('doctor', 'patient')) NOT NULL,
+        reply_to UUID REFERENCES chats (id) ON DELETE SET NULL,
+        status TEXT,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT now (),
+            updated_at TIMESTAMP
+        WITH
+            TIME ZONE DEFAULT now (),
+            created_by TEXT,
+            updated_by TEXT,
             is_active BOOLEAN DEFAULT TRUE
     );
