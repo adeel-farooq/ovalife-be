@@ -52,9 +52,9 @@ const Task = sequelize.define(
     sub_type: {
       type: DataTypes.STRING,
     },
-    assignee: {
-      type: DataTypes.UUID,
-    },
+    // assignee: {
+    //   type: DataTypes.UUID,
+    // },
   },
   {
     tableName: "tasks",

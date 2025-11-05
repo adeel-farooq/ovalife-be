@@ -283,6 +283,9 @@ const getUsers = async (req, res) => {
     if (req.query.type) {
       whereClause.type = req.query.type;
     }
+    if (req.query.is_archived) {
+      whereClause.is_archived = req.query.is_archived;
+    }
     const users = await User.findAll({ where: whereClause });
     return res.status(200).json({
       message: "Users fetched successfully",

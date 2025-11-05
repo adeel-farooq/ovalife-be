@@ -1,12 +1,18 @@
 const Task = require("../../models/task");
+const UserTask = require("../../models/user_task");
 const Helpers = require("./helper");
 const createTask = async (req, res) => {
   try {
-    console.log("hello");
-
     const task = await Task.create(req.body);
     if (!task?.id) {
       return res.status(500).json({ message: "Task creation failed." });
+    }
+    if (req.body.assignees && Array.isArray(req.body.assignees)) {
+      const userTasks = req.body.assignees.map((userId) => ({
+        user_id: userId,
+        task_id: task.id,
+      }));
+      await UserTask.bulkCreate(userTasks);
     }
     return res
       .status(201)
@@ -25,6 +31,14 @@ const updateTask = async (req, res) => {
       return res.status(404).json({ message: "Task not found." });
     }
     if (updated) {
+      await UserTask.destroy({ where: { task_id: id } });
+      if (req.body.assignees && Array.isArray(req.body.assignees)) {
+        const userTasks = req.body.assignees.map((userId) => ({
+          user_id: userId,
+          task_id: id,
+        }));
+        await UserTask.bulkCreate(userTasks);
+      }
       const updatedTask = await Task.findOne({ where: { id } });
       return res
         .status(200)

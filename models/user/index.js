@@ -14,7 +14,7 @@ const User = sequelize.define(
     password: { type: DataTypes.TEXT, allowNull: false },
     first_name: { type: DataTypes.TEXT },
     last_name: { type: DataTypes.TEXT },
-
+    is_archived: { type: DataTypes.BOOLEAN, defaultValue: false },
     mobile: { type: DataTypes.TEXT, allowNull: true },
     reset_password_token: { type: DataTypes.STRING },
     reset_password_expires: { type: DataTypes.DATE },

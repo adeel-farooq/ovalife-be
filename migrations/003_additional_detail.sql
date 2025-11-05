@@ -127,8 +127,8 @@ CREATE TABLE
             updated_by TEXT,
             is_active BOOLEAN DEFAULT TRUE,
             account_type TEXT,
-            sub_type TEXT,
-            assignee UUID
+            sub_type TEXT
+            -- assignee UUID
     );
 
 CREATE TABLE
@@ -150,4 +150,11 @@ CREATE TABLE
             created_by TEXT,
             updated_by TEXT,
             is_active BOOLEAN DEFAULT TRUE
+    );
+
+CREATE TABLE
+    IF NOT EXISTS user_tasks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        task_id UUID NOT NULL REFERENCES tasks (id) ON DELETE CASCADE
     );

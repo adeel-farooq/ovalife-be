@@ -5,6 +5,7 @@ CREATE TABLE
         password TEXT NOT NULL,
         first_name TEXT,
         last_name TEXT,
+        is_archived BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE,
