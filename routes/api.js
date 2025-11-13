@@ -10,10 +10,12 @@ const authRoutes = require("./auth");
 const userRoutes = require("./user");
 const taskRoutes = require("./task");
 const chatRoutes = require("./chat");
+const escrowRoutes = require("./escrow");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
 router.use("/task", taskRoutes);
 router.use("/chat", chatRoutes);
+router.use("/escrow", escrowRoutes);
 
 module.exports = router;
