@@ -12,6 +12,7 @@ const taskRoutes = require("./task");
 const chatRoutes = require("./chat");
 const escrowRoutes = require("./escrow");
 const invitationRoutes = require("./invitation");
+const settingsRoutes = require("./settings");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
@@ -19,5 +20,6 @@ router.use("/task", taskRoutes);
 router.use("/chat", chatRoutes);
 router.use("/escrow", escrowRoutes);
 router.use("/invitation", invitationRoutes);
+router.use("/settings", settingsRoutes);
 
 module.exports = router;
