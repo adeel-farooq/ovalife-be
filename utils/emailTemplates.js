@@ -297,6 +297,59 @@ const genericNotificationEmail = (recipientName, title, message) => {
   };
 };
 
+/**
+ * Platform invitation email template
+ * @param {string} senderName - Name of person sending invitation
+ * @param {string} recipientRole - Role (Donor, Parent, etc.)
+ * @param {string} invitationLink - Unique invitation link
+ * @returns {Object} - Subject and HTML content
+ */
+const invitationEmail = (senderName, recipientRole, invitationLink) => {
+  return {
+    subject: `You're invited to join Ovalife as a ${recipientRole}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background-color: #f9f9f9; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+            .link-box { background-color: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin: 15px 0; word-break: break-all; }
+            .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>You're Invited to Ovalife!</h1>
+            </div>
+            <div class="content">
+              <h2>Hello,</h2>
+              <p><strong>${senderName}</strong> has invited you to join the Ovalife platform as a <strong>${recipientRole}</strong>.</p>
+              <p>Ovalife is a fertility and reproductive services platform that connects donors, parents, and clinics.</p>
+              <p>Click the button below to accept your invitation and get started:</p>
+              <a href="${invitationLink}" class="button">Accept Invitation</a>
+              <p>Or copy and paste this link into your browser:</p>
+              <div class="link-box">
+                ${invitationLink}
+              </div>
+              <p>This invitation link is unique to you and should not be shared with others.</p>
+              <p>If you have any questions or didn't expect this invitation, please contact our support team.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2025 Ovalife. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `You're Invited to Ovalife!\n\nHello,\n\n${senderName} has invited you to join the Ovalife platform as a ${recipientRole}.\n\nOvalife is a fertility and reproductive services platform that connects donors, parents, and clinics.\n\nClick this link to accept your invitation:\n${invitationLink}\n\nThis invitation link is unique to you and should not be shared with others.\n\nIf you have any questions or didn't expect this invitation, please contact our support team.\n\n© 2025 Ovalife. All rights reserved.`,
+  };
+};
+
 module.exports = {
   welcomeEmail,
   passwordResetEmail,
@@ -304,4 +357,5 @@ module.exports = {
   escrowStatusUpdateEmail,
   taskAssignmentEmail,
   genericNotificationEmail,
+  invitationEmail,
 };

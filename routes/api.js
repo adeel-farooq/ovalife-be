@@ -11,11 +11,13 @@ const userRoutes = require("./user");
 const taskRoutes = require("./task");
 const chatRoutes = require("./chat");
 const escrowRoutes = require("./escrow");
+const invitationRoutes = require("./invitation");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
 router.use("/task", taskRoutes);
 router.use("/chat", chatRoutes);
 router.use("/escrow", escrowRoutes);
+router.use("/invitation", invitationRoutes);
 
 module.exports = router;
