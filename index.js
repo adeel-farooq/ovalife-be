@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const session = require("express-session");
+const passport = require("./config/passport");
 const apiRouter = require("./routes/api");
 const db = require("./db");
 const fs = require("fs");
@@ -10,6 +12,23 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session middleware for OAuth (required by passport)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "ovalife-session-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
+);
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "ovalife-node Express app" });
