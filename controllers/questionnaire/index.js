@@ -103,8 +103,16 @@ const createQuestionnaire = async (req, res) => {
 };
 
 // Internal: fetch questionnaire with sections and pages
-const getQuestionnaireByIdInternal = async (id) => {
-  const questionnaire = await Questionnaire.findByPk(id, { raw: true });
+const getQuestionnaireByIdInternal = async (obj) => {
+  const { is_active, id } = obj;
+  if (!id) return null;
+  const where = {};
+  if (is_active === "true") where.is_active = true;
+  if (is_active === "false") where.is_active = false;
+  const questionnaire = await Questionnaire.findOne({
+    where: { id, ...where },
+    raw: true,
+  });
   if (!questionnaire) return null;
 
   const sections = await Section.findAll({
@@ -132,7 +140,10 @@ const getQuestionnaire = async (req, res) => {
     if (!id)
       return res.status(400).json({ message: "Parameter 'id' is required." });
 
-    const full = await getQuestionnaireByIdInternal(id);
+    const full = await getQuestionnaireByIdInternal({
+      id,
+      is_active: req.query.is_active,
+    });
     if (!full)
       return res.status(404).json({ message: "Questionnaire not found." });
     return res.status(200).json({
@@ -162,7 +173,10 @@ const listQuestionnaires = async (req, res) => {
     if (include_nested === "true") {
       const results = [];
       for (const q of questionnaires) {
-        const full = await getQuestionnaireByIdInternal(q.id);
+        const full = await getQuestionnaireByIdInternal({
+          id: q.id,
+          is_active,
+        });
         results.push(full);
       }
       return res.status(200).json({
