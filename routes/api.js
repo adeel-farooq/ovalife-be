@@ -14,6 +14,7 @@ const escrowRoutes = require("./escrow");
 const invitationRoutes = require("./invitation");
 const settingsRoutes = require("./settings");
 const emailTemplateRoutes = require("./emailTemplate");
+const questionnaireRoutes = require("./questionnaire");
 
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
@@ -23,5 +24,6 @@ router.use("/escrow", escrowRoutes);
 router.use("/invitation", invitationRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/email-template", emailTemplateRoutes);
+router.use("/questionnaire", questionnaireRoutes);
 
 module.exports = router;
