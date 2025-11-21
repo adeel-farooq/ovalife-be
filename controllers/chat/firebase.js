@@ -1,20 +1,29 @@
-const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
+const {
+  initializeFirebase,
+  isFirebaseEnabled,
+  getFirestore,
+  getRTDB,
+  getAdmin,
+} = require("../../config/firebase");
 
-// Firebase Admin SDK initialization (add this to your main app file if not already done)
-// const serviceAccount = require('path/to/your/firebase-service-account-key.json');
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   databaseURL: "https://your-project-id-default-rtdb.firebaseio.com"
-// });
+// Ensure firebase initialization was attempted (idempotent)
+initializeFirebase();
 
-const db = admin.firestore();
-const rtdb = admin.database();
+const db = isFirebaseEnabled() ? getFirestore() : null;
+const rtdb = isFirebaseEnabled() ? getRTDB() : null;
 
 // Create a new chat message
 const createFirebaseChat = async (req, res) => {
   try {
-    const { sender_id, receiver_id, message, sender } = req.body;
+    if (!isFirebaseEnabled()) {
+      return res.status(503).json({
+        message:
+          "Firebase is not configured on the server. Chat functionality is disabled.",
+      });
+    }
+
+    const { sender_id, receiver_id, message, sender } = req.body || {};
 
     if (!sender_id || !receiver_id || !message) {
       return res.status(400).json({
@@ -22,6 +31,7 @@ const createFirebaseChat = async (req, res) => {
       });
     }
 
+    const admin = getAdmin();
     const chatData = {
       id: uuidv4(),
       sender_id,
@@ -44,14 +54,18 @@ const createFirebaseChat = async (req, res) => {
     await rtdb.ref(`chatRooms/${chatRoomId}/messages`).push({
       ...chatData,
       firestore_id: docRef.id,
-      timestamp: admin.database.ServerValue.TIMESTAMP,
+      timestamp: getRTDB().ServerValue
+        ? getRTDB().ServerValue.TIMESTAMP
+        : Date.now(),
     });
 
     // Update last message in chat room
     await rtdb.ref(`chatRooms/${chatRoomId}/lastMessage`).set({
       message,
       sender_id,
-      timestamp: admin.database.ServerValue.TIMESTAMP,
+      timestamp: getRTDB().ServerValue
+        ? getRTDB().ServerValue.TIMESTAMP
+        : Date.now(),
     });
 
     res.status(201).json({
@@ -67,7 +81,14 @@ const createFirebaseChat = async (req, res) => {
 // Get all messages between two users
 const getFirebaseChats = async (req, res) => {
   try {
-    const { doctor_id, patient_id } = req.query;
+    if (!isFirebaseEnabled()) {
+      return res.status(503).json({
+        message:
+          "Firebase is not configured on the server. Chat functionality is disabled.",
+      });
+    }
+
+    const { doctor_id, patient_id } = req.query || {};
 
     if (!doctor_id || !patient_id) {
       const missingFields = [];
@@ -124,7 +145,14 @@ const getFirebaseChats = async (req, res) => {
 // Get messages from Realtime Database (for real-time chat)
 const getRealTimeChats = async (req, res) => {
   try {
-    const { doctor_id, patient_id } = req.query;
+    if (!isFirebaseEnabled()) {
+      return res.status(503).json({
+        message:
+          "Firebase is not configured on the server. Chat functionality is disabled.",
+      });
+    }
+
+    const { doctor_id, patient_id } = req.query || {};
 
     if (!doctor_id || !patient_id) {
       return res.status(400).json({
@@ -184,6 +212,7 @@ const getFirebaseChatById = async (req, res) => {
 const updateFirebaseChat = async (req, res) => {
   try {
     const { id } = req.params;
+    const admin = getAdmin();
     const updateData = {
       ...req.body,
       updated_at: admin.firestore.Timestamp.now(),
@@ -205,6 +234,7 @@ const updateFirebaseChat = async (req, res) => {
 const deleteFirebaseChat = async (req, res) => {
   try {
     const { id } = req.params;
+    const admin = getAdmin();
 
     await db.collection("chats").doc(id).update({
       is_active: false,
@@ -225,6 +255,7 @@ const deleteFirebaseChat = async (req, res) => {
 const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
+    const admin = getAdmin();
 
     await db.collection("chats").doc(id).update({
       status: "read",
