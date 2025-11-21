@@ -1,12 +1,39 @@
 const admin = require("firebase-admin");
 
-// Firebase Admin SDK configuration
-const initializeFirebase = () => {
-  try {
-    // Replace with your actual Firebase service account key path
-    // const serviceAccount = require('./path/to/your/firebase-service-account-key.json');
+// Internal state
+let _initialized = false;
+let _enabled = false;
+let _admin = null;
+let _firestore = null;
+let _rtdb = null;
 
-    // For now, using environment variables (more secure)
+// Helper to check required env vars
+const _hasRequiredEnv = () => {
+  return (
+    process.env.FIREBASE_PROJECT_ID &&
+    process.env.FIREBASE_PRIVATE_KEY &&
+    process.env.FIREBASE_CLIENT_EMAIL
+  );
+};
+
+// Initialize Firebase only if required env vars are present.
+// If env vars are missing, do not throw — mark Firebase as disabled and return an object indicating that.
+const initializeFirebase = () => {
+  if (_initialized) {
+    return { enabled: _enabled, admin: _admin, db: _firestore, rtdb: _rtdb };
+  }
+
+  _initialized = true;
+
+  if (!_hasRequiredEnv()) {
+    console.warn(
+      "⚠️  Firebase environment variables not found. Firebase features (chat) will be disabled."
+    );
+    _enabled = false;
+    return { enabled: false };
+  }
+
+  try {
     const serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -30,11 +57,29 @@ const initializeFirebase = () => {
       console.log("Firebase Admin SDK initialized successfully");
     }
 
-    return admin;
+    _admin = admin;
+    _firestore = admin.firestore();
+    _rtdb = admin.database();
+    _enabled = true;
+
+    return { enabled: true, admin: _admin, db: _firestore, rtdb: _rtdb };
   } catch (error) {
     console.error("Firebase initialization error:", error);
-    throw error;
+    // Don't throw - keep server running but mark Firebase as disabled
+    _enabled = false;
+    return { enabled: false, error };
   }
 };
 
-module.exports = { initializeFirebase };
+const isFirebaseEnabled = () => _enabled;
+const getAdmin = () => _admin;
+const getFirestore = () => _firestore;
+const getRTDB = () => _rtdb;
+
+module.exports = {
+  initializeFirebase,
+  isFirebaseEnabled,
+  getAdmin,
+  getFirestore,
+  getRTDB,
+};
