@@ -1,7 +1,7 @@
 const Questionnaire = require("../../models/questionnaire");
 const Section = require("../../models/section");
 const Page = require("../../models/page");
-const { validateQuestionnairePayload } = require("./helper");
+
 const { sequelize } = require("../../db");
 
 // Small helper for timestamps
@@ -18,10 +18,6 @@ const createQuestionnaire = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized access." });
     }
     const payload = req.body;
-    const validationError = validateQuestionnairePayload(payload);
-    if (validationError) {
-      return res.status(400).json({ message: validationError });
-    }
 
     const t = await sequelize.transaction();
     try {
@@ -86,10 +82,21 @@ const createQuestionnaire = async (req, res) => {
         }
       }
 
+      // Create dynamic tables for pages based on payload before commit
+      try {
+      } catch (dynamicErr) {
+        console.error("Dynamic table creation error:", dynamicErr);
+        await t.rollback();
+        return res
+          .status(500)
+          .json({ message: "Failed to create dynamic tables." });
+      }
+
       await t.commit();
 
       return res.status(201).json({
         message: "Questionnaire created successfully.",
+        questionnaire_id: createdQuestionnaire.id,
       });
     } catch (err) {
       await t.rollback();
@@ -278,6 +285,16 @@ const updateQuestionnaire = async (req, res) => {
               await Page.create(pageData, { transaction: t });
             }
           }
+        }
+
+        // Create dynamic tables based on updated structure
+        try {
+        } catch (dynamicErr) {
+          console.error("Dynamic table creation error:", dynamicErr);
+          await t.rollback();
+          return res
+            .status(500)
+            .json({ message: "Failed to create dynamic tables." });
         }
       }
 
