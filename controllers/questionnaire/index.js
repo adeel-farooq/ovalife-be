@@ -2,6 +2,12 @@ const Questionnaire = require("../../models/questionnaire");
 const Section = require("../../models/section");
 const Page = require("../../models/page");
 
+const {
+  validateQuestionnairePayload,
+  checkDuplicateName,
+  generatePGQueries,
+  updateTablesFromPayload,
+} = require("./helper");
 const { sequelize } = require("../../db");
 
 // Small helper for timestamps
@@ -18,6 +24,20 @@ const createQuestionnaire = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized access." });
     }
     const payload = req.body;
+
+    // Validate payload structure
+    const validationError = validateQuestionnairePayload(payload);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    // Check for duplicate name
+    const isDuplicate = await checkDuplicateName(payload.name);
+    if (isDuplicate) {
+      return res.status(400).json({
+        message: "Questionnaire with this name already exists",
+      });
+    }
 
     const t = await sequelize.transaction();
     try {
@@ -84,6 +104,8 @@ const createQuestionnaire = async (req, res) => {
 
       // Create dynamic tables for pages based on payload before commit
       try {
+        const sqlQuery = generatePGQueries(payload)?.join("\n");
+        await sequelize.query(sqlQuery, { transaction: t });
       } catch (dynamicErr) {
         console.error("Dynamic table creation error:", dynamicErr);
         await t.rollback();
@@ -207,6 +229,22 @@ const updateQuestionnaire = async (req, res) => {
   const { id } = req.params;
   const payload = req.body;
   try {
+    // Validate payload if name is being updated
+    if (payload.name) {
+      const validationError = validateQuestionnairePayload(payload);
+      if (validationError) {
+        return res.status(400).json({ message: validationError });
+      }
+
+      // Check for duplicate name (excluding current questionnaire)
+      const isDuplicate = await checkDuplicateName(payload.name, id);
+      if (isDuplicate) {
+        return res.status(400).json({
+          message: "Questionnaire with this name already exists",
+        });
+      }
+    }
+
     const t = await sequelize.transaction();
     try {
       const questionnaire = await Questionnaire.findByPk(id, {
@@ -287,14 +325,15 @@ const updateQuestionnaire = async (req, res) => {
           }
         }
 
-        // Create dynamic tables based on updated structure
+        // Update/rename dynamic tables and columns based on payload
         try {
+          await updateTablesFromPayload(payload, t);
         } catch (dynamicErr) {
-          console.error("Dynamic table creation error:", dynamicErr);
+          console.error("Dynamic table update error:", dynamicErr);
           await t.rollback();
           return res
             .status(500)
-            .json({ message: "Failed to create dynamic tables." });
+            .json({ message: "Failed to update dynamic tables." });
         }
       }
 
